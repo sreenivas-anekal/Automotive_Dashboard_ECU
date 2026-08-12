@@ -12,11 +12,11 @@ extern "C" {
 
 void ADC_Sensor_Init(void);
 
-uint16_t ADC_Read_Raw(uint8_t channel);
+uint16_t ADC_Sensor_ReadRaw(void);
 
-float ADC_ConvertToVoltage(uint16_t raw_value);
+float ADC_Sensor_GetVoltage(uint16_t raw_value);
 
-float ADC_GetFuelLevelPercentage(uint16_t raw_value);
+float ADC_Sensor_GetFuelPercentage(uint16_t raw_value);
 
 #ifdef __cplusplus
 }

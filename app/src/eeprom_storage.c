@@ -1,44 +1,92 @@
 #include "eeprom_storage.h"
 #include <string.h>
-#include <stdio.h>
 
-#define EEPROM_SIM_SIZE 512
-#define ODOMETER_ADDR   0x00
+static uint8_t eeprom_memory[EEPROM_STORAGE_SIZE];
+static bool eeprom_initialized = false;
 
-/* Simulated EEPROM storage array in RAM/Flash */
-static uint8_t simulated_eeprom[EEPROM_SIM_SIZE] = {0};
-
-void EEPROM_Storage_Init(void) {
-    // Initialize or load simulated non-volatile storage
-    // For simulation, let's inject a default starting odometer value (e.g., 12345 km) if empty
-    uint32_t default_km = 12345;
-    uint32_t stored_km;
-    
-    EEPROM_ReadData(ODOMETER_ADDR, (uint8_t*)&stored_km, sizeof(uint32_t));
-    if (stored_km == 0xFFFFFFFF || stored_km == 0x00000000) {
-        EEPROM_SaveOdometer(default_km);
-    }
+void EEPROM_Storage_Init(void)
+{
+    memset(eeprom_memory, 0xFF, sizeof(eeprom_memory));
+    eeprom_initialized = true;
 }
 
-void EEPROM_WriteData(uint16_t address, const uint8_t* data, uint16_t length) {
-    if (address + length <= EEPROM_SIM_SIZE && data != NULL) {
-        memcpy(&simulated_eeprom[address], data, length);
-        printf("[EEPROM] Wrote %u bytes to address 0x%03X\n", length, address);
-    }
+bool EEPROM_WriteByte(uint16_t address, uint8_t data)
+{
+    if (!eeprom_initialized)
+        return false;
+
+    if (address >= EEPROM_STORAGE_SIZE)
+        return false;
+
+    eeprom_memory[address] = data;
+
+    return true;
 }
 
-void EEPROM_ReadData(uint16_t address, uint8_t* buffer, uint16_t length) {
-    if (address + length <= EEPROM_SIM_SIZE && buffer != NULL) {
-        memcpy(buffer, &simulated_eeprom[address], length);
-    }
+bool EEPROM_ReadByte(uint16_t address, uint8_t *data)
+{
+    if (!eeprom_initialized)
+        return false;
+
+    if (data == NULL)
+        return false;
+
+    if (address >= EEPROM_STORAGE_SIZE)
+        return false;
+
+    *data = eeprom_memory[address];
+
+    return true;
 }
 
-uint32_t EEPROM_GetOdometer(void) {
-    uint32_t mileage = 0;
-    EEPROM_ReadData(ODOMETER_ADDR, (uint8_t*)&mileage, sizeof(uint32_t));
-    return mileage;
+bool EEPROM_WriteBlock(
+    uint16_t address,
+    const uint8_t *data,
+    uint16_t length)
+{
+    if (!eeprom_initialized)
+        return false;
+
+    if (data == NULL)
+        return false;
+
+    if (address >= EEPROM_STORAGE_SIZE)
+        return false;
+
+    if (length > (EEPROM_STORAGE_SIZE - address))
+        return false;
+
+    memcpy(
+        &eeprom_memory[address],
+        data,
+        length
+    );
+
+    return true;
 }
 
-void EEPROM_SaveOdometer(uint32_t mileage) {
-    EEPROM_WriteData(ODOMETER_ADDR, (const uint8_t*)&mileage, sizeof(uint32_t));
+bool EEPROM_ReadBlock(
+    uint16_t address,
+    uint8_t *data,
+    uint16_t length)
+{
+    if (!eeprom_initialized)
+        return false;
+
+    if (data == NULL)
+        return false;
+
+    if (address >= EEPROM_STORAGE_SIZE)
+        return false;
+
+    if (length > (EEPROM_STORAGE_SIZE - address))
+        return false;
+
+    memcpy(
+        data,
+        &eeprom_memory[address],
+        length
+    );
+
+    return true;
 }

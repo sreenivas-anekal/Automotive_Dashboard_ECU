@@ -4,8 +4,8 @@
 #include <string.h>
 
 #define CAN_MAX_DATA_LENGTH 8U
-#define CAN_SOF 0xAAU
-#define CAN_FRAME_SIZE 13U
+#define CAN_SOF             0xAAU
+#define CAN_FRAME_SIZE      13U
 
 typedef struct
 {
@@ -14,10 +14,8 @@ typedef struct
     uint8_t length;
 } CAN_Message_t;
 
-
-/* ---------------------------------------------------------
- * Test-side frame construction
- * --------------------------------------------------------- */
+static int tests_passed = 0;
+static int tests_failed = 0;
 
 static uint8_t CAN_CalculateChecksum(
     const uint8_t *data,
@@ -103,14 +101,6 @@ static bool CAN_ValidateFrame(
     return true;
 }
 
-
-/* ---------------------------------------------------------
- * Test framework
- * --------------------------------------------------------- */
-
-static int tests_passed = 0;
-static int tests_failed = 0;
-
 static void check(
     const char *test_name,
     bool result)
@@ -127,11 +117,6 @@ static void check(
     }
 }
 
-
-/* ---------------------------------------------------------
- * Tests
- * --------------------------------------------------------- */
-
 int main(void)
 {
     uint8_t frame[CAN_FRAME_SIZE];
@@ -141,23 +126,14 @@ int main(void)
     printf(" CAN Driver Unit Test\n");
     printf("========================================\n\n");
 
-
-    /* Valid standard CAN message */
-
     CAN_Message_t message1 =
     {
         .id = 0x123U,
         .length = 8U,
         .data =
         {
-            0x10U,
-            0x20U,
-            0x30U,
-            0x40U,
-            0x50U,
-            0x60U,
-            0x70U,
-            0x80U
+            0x10U, 0x20U, 0x30U, 0x40U,
+            0x50U, 0x60U, 0x70U, 0x80U
         }
     };
 
@@ -171,9 +147,6 @@ int main(void)
         CAN_ValidateFrame(frame)
     );
 
-
-    /* Maximum valid 11-bit identifier */
-
     CAN_Message_t message2 =
     {
         .id = 0x7FFU,
@@ -185,9 +158,6 @@ int main(void)
         "Maximum 11-bit CAN ID 0x7FF accepted",
         CAN_BuildFrame(&message2, frame)
     );
-
-
-    /* Invalid CAN identifier */
 
     CAN_Message_t message3 =
     {
@@ -201,9 +171,6 @@ int main(void)
         !CAN_BuildFrame(&message3, frame)
     );
 
-
-    /* Zero-byte payload */
-
     CAN_Message_t message4 =
     {
         .id = 0x100U,
@@ -215,9 +182,6 @@ int main(void)
         "Zero-byte CAN payload accepted",
         CAN_BuildFrame(&message4, frame)
     );
-
-
-    /* Maximum 8-byte payload */
 
     CAN_Message_t message5 =
     {
@@ -235,9 +199,6 @@ int main(void)
         CAN_BuildFrame(&message5, frame)
     );
 
-
-    /* Invalid payload length */
-
     CAN_Message_t message6 =
     {
         .id = 0x300U,
@@ -254,24 +215,15 @@ int main(void)
         !CAN_BuildFrame(&message6, frame)
     );
 
-
-    /* NULL message */
-
     check(
         "NULL message rejected",
         !CAN_BuildFrame(NULL, frame)
     );
 
-
-    /* NULL frame buffer */
-
     check(
         "NULL frame buffer rejected",
         !CAN_BuildFrame(&message1, NULL)
     );
-
-
-    /* Corrupted frame */
 
     CAN_BuildFrame(&message1, frame);
 
@@ -282,9 +234,6 @@ int main(void)
         !CAN_ValidateFrame(frame)
     );
 
-
-    /* Invalid start byte */
-
     CAN_BuildFrame(&message1, frame);
 
     frame[0] = 0x55U;
@@ -294,16 +243,12 @@ int main(void)
         !CAN_ValidateFrame(frame)
     );
 
-
-    /* Valid checksum */
-
     CAN_BuildFrame(&message1, frame);
 
     check(
         "Valid checksum accepted",
         CAN_ValidateFrame(frame)
     );
-
 
     printf("\n========================================\n");
     printf("Tests passed: %d\n", tests_passed);

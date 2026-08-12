@@ -7,14 +7,20 @@
 extern "C" {
 #endif
 
-typedef enum {
+typedef enum
+{
     LOG_LEVEL_INFO = 0,
     LOG_LEVEL_WARN,
     LOG_LEVEL_ERROR
 } LogLevel_t;
 
 void UART_Debug_Init(void);
-void UART_Log(LogLevel_t level, const char* tag, const char* message);
+
+void UART_Log(
+    LogLevel_t level,
+    const char *tag,
+    const char *message
+);
 
 #ifdef __cplusplus
 }

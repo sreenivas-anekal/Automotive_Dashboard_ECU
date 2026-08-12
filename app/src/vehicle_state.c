@@ -1,19 +1,14 @@
 #include "vehicle_state.h"
 
-/*
- * Current vehicle state is intentionally private to this module.
- * Other modules interact with the state machine through its public API.
- */
 static VehicleState_t current_state = STATE_OFF;
-
 
 void VehicleState_Init(void)
 {
     current_state = STATE_OFF;
 }
 
-
-VehicleState_t VehicleState_ProcessEvent(VehicleEvent_t event)
+VehicleState_t VehicleState_ProcessEvent(
+    VehicleEvent_t event)
 {
     switch (current_state)
     {
@@ -25,7 +20,6 @@ VehicleState_t VehicleState_ProcessEvent(VehicleEvent_t event)
             }
 
             break;
-
 
         case STATE_IGNITION:
 
@@ -39,7 +33,6 @@ VehicleState_t VehicleState_ProcessEvent(VehicleEvent_t event)
             }
 
             break;
-
 
         case STATE_IDLE:
 
@@ -58,19 +51,15 @@ VehicleState_t VehicleState_ProcessEvent(VehicleEvent_t event)
 
             break;
 
-
         case STATE_RUNNING:
 
-            if (event == EVENT_VEHICLE_MOVE)
-            {
-                /*
-                 * Vehicle movement does not change the operating state.
-                 * Vehicle motion data will be handled by other modules.
-                 */
-            }
-            else if (event == EVENT_CRITICAL_FAULT)
+            if (event == EVENT_CRITICAL_FAULT)
             {
                 current_state = STATE_FAULT;
+            }
+            else if (event == EVENT_VEHICLE_MOVE)
+            {
+                /* Remain in RUNNING state. */
             }
             else if (event == EVENT_SHUTDOWN)
             {
@@ -79,27 +68,22 @@ VehicleState_t VehicleState_ProcessEvent(VehicleEvent_t event)
 
             break;
 
-
         case STATE_FAULT:
 
             if (event == EVENT_FAULT_CLEARED)
             {
-                /*
-                 * Return to IGNITION so that the normal startup/self-test
-                 * sequence must be completed again.
-                 */
                 current_state = STATE_IGNITION;
+            }
+            else if (event == EVENT_SHUTDOWN)
+            {
+                current_state = STATE_OFF;
             }
 
             break;
 
-
         default:
 
-            /*
-             * Defensive fallback.
-             * An invalid internal state is treated as a fault condition.
-             */
+            /* Safety fallback */
             current_state = STATE_FAULT;
 
             break;
@@ -107,7 +91,6 @@ VehicleState_t VehicleState_ProcessEvent(VehicleEvent_t event)
 
     return current_state;
 }
-
 
 VehicleState_t VehicleState_GetCurrent(void)
 {

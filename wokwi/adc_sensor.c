@@ -2,6 +2,7 @@
 #include "adc_sensor.h"
 
 #include <stdio.h>
+#include <string.h>
 
 ADC_HandleTypeDef hadc1;
 UART_HandleTypeDef huart2;
@@ -41,6 +42,10 @@ int main(void)
         uint16_t raw_value;
         float voltage;
         float fuel_percentage;
+
+        uint32_t voltage_mv;
+        uint32_t fuel_x10;
+
         char buffer[100];
 
         HAL_ADC_Start(&hadc1);
@@ -61,12 +66,29 @@ int main(void)
         fuel_percentage =
             ADC_Sensor_GetFuelPercentage(raw_value);
 
+        /*
+         * Convert float results to integers for UART output.
+         *
+         * voltage_mv:
+         *   1.652 V -> 1652 mV
+         *
+         * fuel_x10:
+         *   50.0 % -> 500
+         */
+        voltage_mv =
+            (uint32_t)(voltage * 1000.0f + 0.5f);
+
+        fuel_x10 =
+            (uint32_t)(fuel_percentage * 10.0f + 0.5f);
+
         sprintf(
             buffer,
-            "ADC Raw: %u | Voltage: %.3f V | Fuel: %.1f %%\r\n",
+            "ADC Raw: %u | Voltage: %lu.%03lu V | Fuel: %lu.%lu %%\r\n",
             raw_value,
-            voltage,
-            fuel_percentage
+            voltage_mv / 1000U,
+            voltage_mv % 1000U,
+            fuel_x10 / 10U,
+            fuel_x10 % 10U
         );
 
         UART_Print(buffer);
@@ -126,26 +148,46 @@ static void MX_ADC1_Init(void)
     __HAL_RCC_ADC_CLK_ENABLE();
 
     hadc1.Instance = ADC1;
+
     hadc1.Init.ClockPrescaler =
         ADC_CLOCK_ASYNC_DIV1;
+
     hadc1.Init.Resolution =
         ADC_RESOLUTION_12B;
+
     hadc1.Init.DataAlign =
         ADC_DATAALIGN_RIGHT;
+
     hadc1.Init.ScanConvMode =
         ADC_SCAN_DISABLE;
+
     hadc1.Init.EOCSelection =
         ADC_EOC_SINGLE_CONV;
-    hadc1.Init.LowPowerAutoWait = DISABLE;
-    hadc1.Init.ContinuousConvMode = DISABLE;
-    hadc1.Init.NbrOfConversion = 1;
-    hadc1.Init.DiscontinuousConvMode = DISABLE;
+
+    hadc1.Init.LowPowerAutoWait =
+        DISABLE;
+
+    hadc1.Init.ContinuousConvMode =
+        DISABLE;
+
+    hadc1.Init.NbrOfConversion =
+        1;
+
+    hadc1.Init.DiscontinuousConvMode =
+        DISABLE;
+
     hadc1.Init.ExternalTrigConv =
         ADC_SOFTWARE_START;
+
     hadc1.Init.ExternalTrigConvEdge =
         ADC_EXTERNALTRIGCONVEDGE_NONE;
-    hadc1.Init.DMAContinuousRequests = DISABLE;
-    hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+
+    hadc1.Init.DMAContinuousRequests =
+        DISABLE;
+
+    hadc1.Init.Overrun =
+        ADC_OVR_DATA_PRESERVED;
+
     hadc1.Init.SamplingTimeCommon1 =
         ADC_SAMPLETIME_39CYCLES_5;
 
@@ -154,8 +196,12 @@ static void MX_ADC1_Init(void)
         Error_Handler();
     }
 
-    channel.Channel = ADC_CHANNEL_0;
-    channel.Rank = ADC_REGULAR_RANK_1;
+    channel.Channel =
+        ADC_CHANNEL_0;
+
+    channel.Rank =
+        ADC_REGULAR_RANK_1;
+
     channel.SamplingTime =
         ADC_SAMPLINGTIME_COMMON_1;
 
@@ -173,11 +219,19 @@ static void MX_GPIO_Init(void)
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
 
-    gpio.Pin = GPIO_PIN_0;
-    gpio.Mode = GPIO_MODE_ANALOG;
-    gpio.Pull = GPIO_NOPULL;
+    gpio.Pin =
+        GPIO_PIN_0;
 
-    HAL_GPIO_Init(GPIOA, &gpio);
+    gpio.Mode =
+        GPIO_MODE_ANALOG;
+
+    gpio.Pull =
+        GPIO_NOPULL;
+
+    HAL_GPIO_Init(
+        GPIOA,
+        &gpio
+    );
 }
 
 static void MX_USART2_UART_Init(void)
@@ -187,25 +241,53 @@ static void MX_USART2_UART_Init(void)
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_USART2_CLK_ENABLE();
 
-    gpio.Pin = GPIO_PIN_2 | GPIO_PIN_3;
-    gpio.Mode = GPIO_MODE_AF_PP;
-    gpio.Pull = GPIO_NOPULL;
-    gpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    gpio.Alternate = GPIO_AF1_USART2;
+    gpio.Pin =
+        GPIO_PIN_2 | GPIO_PIN_3;
 
-    HAL_GPIO_Init(GPIOA, &gpio);
+    gpio.Mode =
+        GPIO_MODE_AF_PP;
 
-    huart2.Instance = USART2;
+    gpio.Pull =
+        GPIO_NOPULL;
 
-    huart2.Init.BaudRate = 115200;
-    huart2.Init.WordLength = UART_WORDLENGTH_8B;
-    huart2.Init.StopBits = UART_STOPBITS_1;
-    huart2.Init.Parity = UART_PARITY_NONE;
-    huart2.Init.Mode = UART_MODE_TX_RX;
-    huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+    gpio.Speed =
+        GPIO_SPEED_FREQ_VERY_HIGH;
+
+    gpio.Alternate =
+        GPIO_AF1_USART2;
+
+    HAL_GPIO_Init(
+        GPIOA,
+        &gpio
+    );
+
+    huart2.Instance =
+        USART2;
+
+    huart2.Init.BaudRate =
+        115200;
+
+    huart2.Init.WordLength =
+        UART_WORDLENGTH_8B;
+
+    huart2.Init.StopBits =
+        UART_STOPBITS_1;
+
+    huart2.Init.Parity =
+        UART_PARITY_NONE;
+
+    huart2.Init.Mode =
+        UART_MODE_TX_RX;
+
+    huart2.Init.HwFlowCtl =
+        UART_HWCONTROL_NONE;
+
+    huart2.Init.OverSampling =
+        UART_OVERSAMPLING_16;
+
     huart2.Init.OneBitSampling =
         UART_ONE_BIT_SAMPLE_DISABLE;
+
     huart2.Init.ClockPrescaler =
         UART_PRESCALER_DIV1;
 

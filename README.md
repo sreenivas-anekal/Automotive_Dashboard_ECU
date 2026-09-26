@@ -21,6 +21,7 @@ The project uses a host-based simulation environment for module and integration 
 
 ## System Architecture
 
+```text
                          AUTOMOTIVE ECU
                               |
               +---------------+---------------+
@@ -33,9 +34,11 @@ The project uses a host-based simulation environment for module and integration 
               |               |               |
              UART           EEPROM            CAN
          Diagnostics       Storage       Communication
+```
 
 ## ECU Data Flow
 
+```text
 Simulated Sensor Input
           |
           v
@@ -59,6 +62,7 @@ Scheduler     Vehicle FSM     Diagnostics
         v               v
       EEPROM           CAN
       Storage      Communication
+```
 
 ## Features
 
@@ -70,6 +74,7 @@ The current implementation includes fuel-level processing using a 12-bit ADC mod
 
 Example:
 
+```text
 ADC = 2048
       |
       v
@@ -77,11 +82,13 @@ Voltage ≈ 1.65 V
       |
       v
 Fuel ≈ 50%
+```
 
 ### Vehicle State Machine
 
 The ECU implements a finite state machine for vehicle operating states.
 
+```text
 OFF
  |
  | IGNITION_ON
@@ -95,6 +102,7 @@ IDLE
  | ENGINE_START
  v
 RUNNING
+```
 
 Fault handling and shutdown transitions are also represented in the state machine.
 
@@ -102,9 +110,11 @@ Fault handling and shutdown transitions are also represented in the state machin
 
 A lightweight diagnostic logging interface provides categorized runtime messages:
 
+```text
 INFO
 WARN
 ERROR
+```
 
 Messages are tagged by subsystem to make ECU runtime behavior easier to trace during simulation and debugging.
 
@@ -118,10 +128,12 @@ The integration flow stores the final calculated fuel value to a specified EEPRO
 
 A lightweight periodic task scheduler is implemented to model time-triggered ECU activities.
 
-The current implementation demonstrates tasks running at different periodic intervals:
+The integration environment currently demonstrates tasks running at different periodic intervals:
 
+```text
 Sensor Task          100 ms
 Communication Task   250 ms
+```
 
 ### CAN Communication
 
@@ -136,6 +148,7 @@ The current implementation represents the communication interface at the softwar
 
 ## Project Structure
 
+```text
 Automotive_Dashboard_ECU/
 |
 +-- app/
@@ -177,6 +190,7 @@ Automotive_Dashboard_ECU/
 |
 +-- LICENSE
 +-- README.md
+```
 
 ## Software Architecture
 
@@ -215,6 +229,7 @@ The integration environment initializes the ECU modules, executes the vehicle st
 
 The high-level flow is:
 
+```text
 Initialize ECU Modules
         |
         v
@@ -238,6 +253,7 @@ Store Final Fuel Value
         |
         v
 Report ECU Runtime Results
+```
 
 ## Simulation Environments
 
